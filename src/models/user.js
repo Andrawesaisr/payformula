@@ -48,7 +48,7 @@ const userSchema=new Schema({
             },
             from:{
                 type:String,
-                required:true
+                required:false
             },
             amount:{
                 type:Number,

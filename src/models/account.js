@@ -30,6 +30,10 @@ const accountSchema=new Schema({
     totalCash:{
         type:Number,
         required:true
+    },
+    owner:{
+        type:String,
+        requierd:true
     }
 })
 
