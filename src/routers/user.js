@@ -45,6 +45,8 @@ router.post('/user/login',async(req,res)=>{
     }
     
 })
+
+
 // log out
 router.post('/user/logout',Auth,async(req,res)=>{
     try{    
@@ -57,6 +59,8 @@ router.post('/user/logout',Auth,async(req,res)=>{
     }
     
 })
+
+
 // check cash
 router.get('/user/account',Auth,async (req,res)=>{
     try{
@@ -69,6 +73,8 @@ router.get('/user/account',Auth,async (req,res)=>{
         res.send(e)
     }
 })
+
+
 // check transactions -> deposit
 router.post('/user/deposit/:cash',Auth,async(req,res)=>{
     try{    
@@ -113,7 +119,9 @@ router.post('/user/deposit/:cash',Auth,async(req,res)=>{
     }
 })
 
+
 // check transaction -> withdraw
+
 
 router.post('/user/withdraw/:cash',Auth,async(req,res)=>{
     try{    
@@ -159,18 +167,60 @@ router.post('/user/withdraw/:cash',Auth,async(req,res)=>{
         res.send(e)
     }
 })
+
+
 // check notification
+router.get('/user/notification',Auth,async(req,res)=>{
+    try{
+        let notifications=req.user.notification
+        req.user.notification=[]
+        await req.user.save()
+        res.status(200).send(notifications)
+    }catch(e){
+        console.log(e)
+        res.send(e) 
+    }
+})
+
 
 // send cash
-
-
-
-
-
-
-
-
-
+router.post('/user/send/:cash/:id',Auth,async(req,res)=>{
+    try{
+        const cash=parseInt(req.params.cash)
+        if(req.account.totalCash < cash){
+            return res.send(`${cash} more than you have in your bank account!`)
+        }
+        const receiverAccount= await Account.findOne({owner:req.params.id})
+        if(!receiverAccount){
+            return res.send('this account not even exist !!!')
+        }
+        req.account.totalCash-=cash
+        receiverAccount.totalCash+=cash
+        await receiverAccount.save()
+        await req.account.save()
+        const receiver=await User.findOne({_id:req.params.id})
+        receiver.notification=receiver.notification.concat({
+            amount:cash,
+            date: new Date().toLocaleDateString('en-us', {
+                weekday: "long",
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                second: "numeric",
+                hour12: true
+              }) ,
+            transaction:'deposit',
+            from:req.user.first_name
+        })
+        await receiver.save()
+        res.status(200).send(`${cash} has been sent to ${receiver.first_name}`)
+    }catch(e){
+        console.log(e)
+        res.send(e)
+    }
+})
 
 
 
